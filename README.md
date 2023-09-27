@@ -42,8 +42,10 @@ Adding a `SwiftDataContainerViewer` Scene to your App can give you an easy way t
 
 - Add a Library to your project's Target for: SwiftDataContainerViewer
 
-- In your App struct, create a static let for an array of all of your PersistentModel Types:
+- In your App struct, add an import for the SwiftDataContainerViewer module, and create a static let for an array of all of your PersistentModel Types:
 ```swift
+import SwiftDataContainerViewer
+// ...
     static let modelTypes = [
         Item.self,
     ] as [any PersistentModel.Type]
@@ -57,7 +59,7 @@ Use that static let to create your Schema in your App's sharedModelContainer pro
 Add a new WindowGroup to your App's Scene giving it the same sharedModelContainer and passing the same modelTypes array to the initializer for the SwiftDataContainerViewer:
 ```swift
         WindowGroup(id: "swiftdata-viewer") {
-            SwiftDataContainerViewer(modelTypes: modelTypes)
+            SwiftDataContainerViewer(modelTypes: [your-App-struct-name].modelTypes)
         }
         .modelContainer(sharedModelContainer)
 ```
@@ -65,15 +67,15 @@ Add a new WindowGroup to your App's Scene giving it the same sharedModelContaine
 Add a Toolbar button (or whatever works for you) to open the SwiftDataContainerViewer's Window:
 ```swift
     @Environment(\.openWindow) private var openWindow
-    ....
-                .toolbar {
-                    ToolbarItem(placement: .automatic) {
-                        Button(action: { self.openWindow(id: "swiftdata-viewer") }) {
-                            Label("SwiftData Viewer", systemImage: "tablecells.badge.ellipsis")
-                                .help("SwiftData Viewer")
-                        }
-                    }
+    // ...
+    .toolbar {
+        ToolbarItem(placement: .automatic) {
+            Button(action: { self.openWindow(id: "swiftdata-viewer") }) {
+                Label("SwiftData Viewer", systemImage: "tablecells.badge.ellipsis")
+                    .help("SwiftData Viewer")
                 }
+            }
+    }
 ```
 
 ## Possible Enhancements
