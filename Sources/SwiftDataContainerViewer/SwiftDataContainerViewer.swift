@@ -21,6 +21,8 @@ public struct SwiftDataContainerViewer: View {
     @StateObject private var viewModel = SDVViewModel()
     @Environment(\.modelContext) private var modelContext   // SwiftData's Model Context
 
+    @State var refreshID = UUID()
+
     public var body: some View {
         
         NavigationSplitView {
@@ -28,12 +30,22 @@ public struct SwiftDataContainerViewer: View {
         }  detail: {
             SDVDetailView()
         }
-        .inspector(isPresented: self.$viewModel.inspectorPresented) {
+        .inspector(isPresented: $viewModel.inspectorPresented) {
             SDVInspectorView()
                 .inspectorColumnWidth(min: 350, ideal: 450, max: 700)
         }
-        .environmentObject(self.viewModel)
-        .environment(\.managedObjectContext, self.viewModel.setModel(modelContext: self.modelContext, modelTypes: self.modelTypes))
+        .id(refreshID)
+        .onAppear(perform: onAppear )
+        .environmentObject(viewModel)
+        .environment(\.managedObjectContext, viewModel.setModel(modelContext: modelContext,
+                                                                modelTypes: modelTypes))
+    }
+    
+    private func onAppear() {
+        NotificationCenter.default.addObserver(forName: ModelContext.didSave,
+                                               object: nil,
+                                               queue: OperationQueue.main,
+                                               using: {_ in refreshID = UUID() } )
     }
     
 }
