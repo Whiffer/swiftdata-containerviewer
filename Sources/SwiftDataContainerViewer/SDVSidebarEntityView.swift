@@ -21,7 +21,7 @@ struct SDVSidebarEntityView: View {
                 Spacer()
                 Text("\(entity.count(in: context))")
             }
-            .frame(width: 30.0)
+            .frame(width: 50.0)
             Text(" \(entity.name ?? "** ERROR **")")
             Spacer()
         }
