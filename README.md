@@ -5,6 +5,8 @@ This package is a general purpose interractive development tool for viewing the 
 ## Verion History
 
 2023-09-27 v1.0.0 Initial Package Release
+2024-10-09 v1.0.1 Added Observation of Context Changes to refresh SwiftUI Views
+2024-10-12 v1.0.2 Converted ObservableObject's to @Observable's, Pick proper context saved notification based on OS version
 
 ## Why use SwiftDataContainerViewer?
 
@@ -83,5 +85,7 @@ Add a Toolbar button (or whatever works for you) to open the SwiftDataContainerV
 - Create a general purpose API for use with XCTest
 
 ## Known Issues
+
+There may be some scrolling performance issues with large Model Contexts.
 
 One issue that has been observed on an iPad is with the NavigationStack in the .inspector as part of the NavigationSplitView. On an iPad, when selecting the first "ToOne" relationship link, the inspector will open, but nothing is displayed. Tapping the same link a second time will show the correct data.  This issue appears to be documented in the Release Notes for the iPadOS 17 Release Candidate.

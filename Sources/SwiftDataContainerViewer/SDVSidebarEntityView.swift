@@ -19,10 +19,10 @@ struct SDVSidebarEntityView: View {
         HStack {
             HStack {
                 Spacer()
-                Text("\(self.entity.count(in: context))")
+                Text("\(entity.count(in: context))")
             }
             .frame(width: 30.0)
-            Text(" \(self.entity.name ?? "** ERROR **")")
+            Text(" \(entity.name ?? "** ERROR **")")
             Spacer()
         }
     }

@@ -18,10 +18,8 @@ public struct SwiftDataContainerViewer: View {
         self.modelTypes = modelTypes
     }
     
-    @StateObject private var viewModel = SDVViewModel()
+    @State private var viewModel = SDVViewModel()
     @Environment(\.modelContext) private var modelContext   // SwiftData's Model Context
-
-    @State var refreshID = UUID()
 
     public var body: some View {
         
@@ -34,18 +32,10 @@ public struct SwiftDataContainerViewer: View {
             SDVInspectorView()
                 .inspectorColumnWidth(min: 350, ideal: 450, max: 700)
         }
-        .id(refreshID)
-        .onAppear(perform: onAppear )
-        .environmentObject(viewModel)
+        .id(viewModel.refreshID)
+        .environment(viewModel)
         .environment(\.managedObjectContext, viewModel.setModel(modelContext: modelContext,
                                                                 modelTypes: modelTypes))
-    }
-    
-    private func onAppear() {
-        NotificationCenter.default.addObserver(forName: ModelContext.didSave,
-                                               object: nil,
-                                               queue: OperationQueue.main,
-                                               using: {_ in refreshID = UUID() } )
     }
     
 }

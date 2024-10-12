@@ -9,32 +9,34 @@ import SwiftUI
 
 struct SDVDetailView: View {
     
-    @EnvironmentObject private var viewModel: SDVViewModel
+    @Environment(SDVViewModel.self) private var viewModel
 
     var body: some View {
         
-        NavigationStack(path: self.$viewModel.toManyObjectsPath) {
+        @Bindable var viewModel = viewModel
+        
+        NavigationStack(path: $viewModel.toManyObjectsPath) {
             Text("Select a SwiftData Entity")
                 .navigationDestination(for: ToManyObjects.self) { tableObjects in
                     SDVObjectsView(tableObjects: tableObjects)
                         .toolbar {
                             ToolbarItem(placement: .navigation) {
-                                Button(action: { self.viewModel.backwardToManyObjects() },
+                                Button(action: { viewModel.backwardToManyObjects() },
                                        label: { SwiftUI.Image(systemName: "chevron.backward") })
-                                .disabled(self.viewModel.backwardToManyDisabled)
+                                .disabled(viewModel.backwardToManyDisabled)
                             }
                             ToolbarItem(placement: .navigation) {
-                                Button(action: { self.viewModel.forwardToManyObjects() },
+                                Button(action: { viewModel.forwardToManyObjects() },
                                        label: { SwiftUI.Image(systemName: "chevron.forward") })
-                                .disabled(self.viewModel.forwardToManyDisabled)
+                                .disabled(viewModel.forwardToManyDisabled)
                             }
                             ToolbarItem(placement: .primaryAction) {
-                                Button(action: { self.viewModel.inspectorPresented.toggle() },
+                                Button(action: { viewModel.inspectorPresented.toggle() },
                                        label: { SwiftUI.Image(systemName: "info.circle") } )
                             }
                         }
                         .navigationBarBackButtonHidden(true)
-                        .navigationTitle("\(self.viewModel.navigationTitle)")
+                        .navigationTitle("\(viewModel.navigationTitle)")
                 #if os(iOS)
                         .navigationBarTitleDisplayMode(.inline)
                 #endif
@@ -42,7 +44,7 @@ struct SDVDetailView: View {
         }
         .toolbar { 
             ToolbarItem(placement: .primaryAction) {
-                Button(action: { self.viewModel.inspectorPresented.toggle() },
+                Button(action: { viewModel.inspectorPresented.toggle() },
                        label: { SwiftUI.Image(systemName: "info.circle") } )
             }
         }

@@ -15,7 +15,7 @@ struct SDVObjectView: View {
     @State private var attributes = [NSAttributeDescription]()
     @State private var relationships = [NSRelationshipDescription]()
     
-    @EnvironmentObject private var viewModel: SDVViewModel
+    @Environment(SDVViewModel.self) private var viewModel
 
     var body: some View {
         
@@ -23,9 +23,9 @@ struct SDVObjectView: View {
             List {
                 Section(header: Text("Attributes")) {
                     Grid(alignment: .topLeading, horizontalSpacing: 10.0) {
-                        ForEach(self.attributes, id: \.self) { attribute in
+                        ForEach(attributes, id: \.self) { attribute in
                             GridRow {
-                                let attributeValue = self.attributeValue(attribute: attribute)
+                                let attributeValue = attributeValue(attribute: attribute)
                                 Text("\(attributeValue.name): \(attributeValue.class)")
                                 HStack {
                                     Spacer()
@@ -43,18 +43,18 @@ struct SDVObjectView: View {
                 }
                 Section(header: Text("Relationships")) {
                     Grid(alignment: .topLeading, horizontalSpacing: 10.0) {
-                        ForEach(self.relationships, id: \.self) { relationship in
+                        ForEach(relationships, id: \.self) { relationship in
                             GridRow {
                                 Text("\(relationship.name)")
-                                Button(action: { self.navigate(relationship: relationship) }, label: {
+                                Button(action: { navigate(relationship: relationship) }, label: {
                                     HStack {
                                         Spacer()
-                                        Text("\(self.relationshipValue(relationship: relationship))")
+                                        Text("\(relationshipValue(relationship: relationship))")
                                         SwiftUI.Image(systemName: self.countInRelationship(relationship: relationship) > 1 ? "ellipsis.circle" : "info.circle")
                                     }
                                 } )
                                 .contentShape(Rectangle())
-                                .disabled(self.countInRelationship(relationship: relationship) < 1)
+                                .disabled(countInRelationship(relationship: relationship) < 1)
                                 .buttonStyle(.plain)
                                 .foregroundStyle(Color.linkColor)
                                     .gridColumnAlignment(.trailing)
@@ -68,12 +68,12 @@ struct SDVObjectView: View {
                 }
             }
         }
-        .onAppear(perform: self.onAppear )
+        .onAppear(perform: onAppear )
     }
     
     private func onAppear() {
-        self.attributes = Array(self.managedObject.entity.attributesByName.values).sorted { $0.name < $1.name }
-        self.relationships = Array(self.managedObject.entity.relationshipsByName.values).sorted { $0.name < $1.name }
+        self.attributes = Array(managedObject.entity.attributesByName.values).sorted { $0.name < $1.name }
+        self.relationships = Array(managedObject.entity.relationshipsByName.values).sorted { $0.name < $1.name }
     }
     
     private func attributeValue(attribute: NSAttributeDescription) -> (name: String, class: String, value: String) {
@@ -82,51 +82,51 @@ struct SDVObjectView: View {
         
         switch attribute.attributeValueClassName {
         case "NSData":
-            if let data = self.managedObject.value(forKey: name) as! NSData? {
+            if let data = managedObject.value(forKey: name) as! NSData? {
                 let value = String(format: "Size: %lu bytes", data.length)
                 return (name: name, class: "Data", value: value)
             } else {
                 return (name: name, class: "Data", value: "nil")
             }
         case "NSDecimalNumber":
-            if let number = self.managedObject.value(forKey: name) as? NSDecimalNumber {
+            if let number = managedObject.value(forKey: name) as? NSDecimalNumber {
                 return (name: name, class: "DecimalNumber", value: "\(number)")
             } else {
                 return (name: name, class: "DecimalNumber", value: "nil")
             }
         case "NSNumber":
-            if let number = self.managedObject.value(forKey: name) as? NSNumber {
+            if let number = managedObject.value(forKey: name) as? NSNumber {
                 return (name: name, class: "Number", value: "\(number)")
             } else {
                 return (name: name, class: "Number", value: "nil")
             }
         case "Bool":    //TODO: make this work?
-            if let number = self.managedObject.value(forKey: name) as? Bool {
+            if let number = managedObject.value(forKey: name) as? Bool {
                 return (name: name, class: "Bool", value: "\(number)")
             } else {
                 return (name: name, class: "Bool", value: "nil")
             }
         case "NSDate":
-            if let date = self.managedObject.value(forKey: name) as? NSDate {
+            if let date = managedObject.value(forKey: name) as? NSDate {
                 return (name: name, class: "Date", value: "\(date)")
             } else {
                 return (name: name, class: "Date", value: "nil")
             }
         case "NSString":
-            if let string = self.managedObject.value(forKey: name) as? String {
+            if let string = managedObject.value(forKey: name) as? String {
                 return (name: name, class: "String", value: "\"\(string)\"")
             } else {
                 return (name: name, class: "String", value: "nil")
             }
         case "NSUUID":
-            if let uuid = self.managedObject.value(forKey: name) as? NSUUID {
+            if let uuid = managedObject.value(forKey: name) as? NSUUID {
                 return (name: name, class: "UUID", value: uuid.uuidString)
             } else {
                 return (name: name, class: "UUID", value: "nil")
             }
         default:
             if let className = attribute.attributeValueClassName {
-                let value = self.managedObject.value(forKey: name) as Any
+                let value = managedObject.value(forKey: name) as Any
                 return (name: name, class: className, value: "\(value)")
             } else {
                 return (name: name, class: "** Unknown **", value: "** Unknown **")
@@ -137,7 +137,7 @@ struct SDVObjectView: View {
     private func relationshipValue(relationship: NSRelationshipDescription) -> String {
         if let name = relationship.destinationEntity?.name {
             let name = relationship.isToMany ? "[\(name)]" : "\(name)"
-            return "\(name)(\(self.countInRelationship(relationship: relationship)))"
+            return "\(name)(\(countInRelationship(relationship: relationship)))"
         } else {
             return "** Unknown **"
         }
@@ -146,7 +146,7 @@ struct SDVObjectView: View {
     private func navigate(relationship: NSRelationshipDescription) {
         if relationship.isToMany {
             if let objects = relationship.toManyObjects(for: managedObject) {
-                let navigationTitle = "\(self.managedObject.entityName).\(relationship.name) ->  \(relationship.targetName)(\(self.countInRelationship(relationship: relationship)))"
+                let navigationTitle = "\(managedObject.entityName).\(relationship.name) ->  \(relationship.targetName)(\(countInRelationship(relationship: relationship)))"
                 let objects = Array(objects)
                 self.viewModel.pushToManyObjects(navigationTitle: navigationTitle, objects: objects)
             }
@@ -159,7 +159,7 @@ struct SDVObjectView: View {
     
     private func countInRelationship(relationship: NSRelationshipDescription) -> Int {
         if relationship.isToMany {
-            if let objects = self.managedObject.value(forKey: relationship.name) as? Set<NSManagedObject> {
+            if let objects = managedObject.value(forKey: relationship.name) as? Set<NSManagedObject> {
                 return objects.count
             } else {
                 return 0

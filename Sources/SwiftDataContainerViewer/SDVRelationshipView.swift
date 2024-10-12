@@ -13,16 +13,16 @@ struct SDVRelationshipView: View {
     let managedObject: NSManagedObject
     let relationship: NSRelationshipDescription
     
-    @EnvironmentObject private var viewModel: SDVViewModel
+    @Environment(SDVViewModel.self) private var viewModel
 
     var body: some View {
         
         if self.countInRelationship > 0 {
-            Button(action: self.navigate , label: {
+            Button(action: navigate , label: {
                 HStack {
                     Spacer()
-                    Text("\(self.countInRelationship)")
-                    SwiftUI.Image(systemName: self.countInRelationship > 1 ? "ellipsis.circle" : "info.circle")
+                    Text("\(countInRelationship)")
+                    SwiftUI.Image(systemName: countInRelationship > 1 ? "ellipsis.circle" : "info.circle")
                 }
             } )
             .buttonStyle(.plain)
@@ -34,19 +34,19 @@ struct SDVRelationshipView: View {
     }
     
     private var countInRelationship: Int {
-        return self.managedObject.count(in: self.relationship)
+        return managedObject.count(in: relationship)
     }
     
     private func navigate() {
         if relationship.isToMany {
             if let objects = relationship.toManyObjects(for: managedObject) {
-                let navigationTitle = "\(self.managedObject.entityName).\(relationship.name) ->  \(relationship.targetName)(\(self.countInRelationship))"
+                let navigationTitle = "\(managedObject.entityName).\(relationship.name) ->  \(relationship.targetName)(\(countInRelationship))"
                 let objects = Array(objects)
-                self.viewModel.pushToManyObjects(navigationTitle: navigationTitle, objects: objects)
+                viewModel.pushToManyObjects(navigationTitle: navigationTitle, objects: objects)
             }
         } else {
             if let object = relationship.toOneObject(for: managedObject) {
-                self.viewModel.pushToOneObject(object: object)
+                viewModel.pushToOneObject(object: object)
             }
         }
     }

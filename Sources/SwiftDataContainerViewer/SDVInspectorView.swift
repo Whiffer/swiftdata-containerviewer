@@ -10,26 +10,28 @@ import CoreData
 
 struct SDVInspectorView: View {
     
-    @EnvironmentObject private var viewModel: SDVViewModel
+    @Environment(SDVViewModel.self) private var viewModel
 
     var body: some View {
         
-        NavigationStack(path: self.$viewModel.toOneObjectPath) {
+        @Bindable var viewModel = viewModel
+        
+        NavigationStack(path: $viewModel.toOneObjectPath) {
             EmptyView()
                 .navigationDestination(for: NSManagedObject.self) { managedObject in
                     SDVObjectView(managedObject: managedObject)
                         .navigationBarBackButtonHidden(true)
                         .toolbar {
-                            if self.viewModel.inspectorPresented {
+                            if viewModel.inspectorPresented {
                                 ToolbarItem(placement: .primaryAction) {
-                                    Button(action: { self.viewModel.backwardToOneObject() },
+                                    Button(action: { viewModel.backwardToOneObject() },
                                            label: { SwiftUI.Image(systemName: "chevron.backward") } )
-                                    .disabled(self.viewModel.backwardToOneDisabled)
+                                    .disabled(viewModel.backwardToOneDisabled)
                                 }
                                 ToolbarItem(placement: .primaryAction) {
-                                    Button(action: { self.viewModel.forwardToOneObject() },
+                                    Button(action: { viewModel.forwardToOneObject() },
                                            label: { SwiftUI.Image(systemName: "chevron.forward") } )
-                                    .disabled(self.viewModel.forwardToOneDisabled)
+                                    .disabled(viewModel.forwardToOneDisabled)
                                 }
                                 ToolbarItem(placement: .primaryAction) {
                                     Text(managedObject.entityName)

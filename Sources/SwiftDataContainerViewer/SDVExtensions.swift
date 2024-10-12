@@ -21,7 +21,7 @@ public extension NSEntityDescription {
     }
     
     func count(in context: NSManagedObjectContext) -> Int {
-        return self.allObjects(in: context).count
+        return allObjects(in: context).count
     }
     
 }

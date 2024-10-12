@@ -21,7 +21,7 @@ struct SDVObjectsView: View {
             ScrollView(.horizontal, showsIndicators: true) {
                 Grid(alignment: .topLeading, horizontalSpacing: 10.0) {
                     GridRow {
-                        ForEach(self.attributes, id: \.self) { attribute in
+                        ForEach(attributes, id: \.self) { attribute in
                             Text("\(attribute.name)")
                                 .gridColumnAlignment(attribute.viewAlignment)
                                 .foregroundStyle(Color.headerTextColor)
@@ -34,12 +34,12 @@ struct SDVObjectsView: View {
                     }
                     .font(.title3)
                     GridRow {
-                        ForEach(self.attributes, id: \.self) { attribute in
+                        ForEach(attributes, id: \.self) { attribute in
                             Text("\(attribute.attributeValueClassName ?? "nil")")
                                 .gridColumnAlignment(attribute.viewAlignment)
                                 .foregroundStyle(Color.secondaryLabelColor)
                         }
-                        ForEach(self.relationships, id: \.self) { relationship in
+                        ForEach(relationships, id: \.self) { relationship in
                             Text(relationship.description)
                                 .gridColumnAlignment(.trailing)
                                 .foregroundStyle(Color.secondaryLabelColor)
@@ -48,13 +48,13 @@ struct SDVObjectsView: View {
                     .font(.footnote)
                     Divider()
                         .gridCellUnsizedAxes(.horizontal)
-                    ForEach(self.tableObjects.managedObjects, id: \.self) { managedObject in
+                    ForEach(tableObjects.managedObjects, id: \.self) { managedObject in
                         GridRow {
-                            ForEach(self.attributes, id: \.self) { attribute in
+                            ForEach(attributes, id: \.self) { attribute in
                                 SDVAttributeView(managedObject: managedObject, attribute: attribute)
                                     .gridColumnAlignment(attribute.viewAlignment)
                             }
-                            ForEach(self.relationships, id: \.self) { relationship in
+                            ForEach(relationships, id: \.self) { relationship in
                                 SDVRelationshipView(managedObject: managedObject, relationship: relationship)
                                     .gridColumnAlignment(.trailing)
                             }
@@ -68,12 +68,12 @@ struct SDVObjectsView: View {
                 .padding()
             }
         }
-        .onAppear(perform: self.onAppear )
+        .onAppear(perform: onAppear )
         
     }
     
     private func onAppear() {
-        if let managedObject = self.tableObjects.managedObjects.first {
+        if let managedObject = tableObjects.managedObjects.first {
             self.attributes = Array(managedObject.entity.attributesByName.values).sorted { $0.name < $1.name }
             self.relationships = Array(managedObject.entity.relationshipsByName.values).sorted { $0.name < $1.name }
         }

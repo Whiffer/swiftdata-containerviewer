@@ -10,15 +10,17 @@ import SwiftData
 import CoreData
 
 @MainActor
-class SDVViewModel : ObservableObject {
+@Observable class SDVViewModel {
     
-    @Published public var toManyObjectsPath: [ToManyObjects]
+    public var refreshID = UUID()
+
+    public var toManyObjectsPath: [ToManyObjects]
     private var toManyObjectsForwardPath: [ToManyObjects]
     
-    @Published public var toOneObjectPath: [NSManagedObject]
+    public var toOneObjectPath: [NSManagedObject]
     private var toOneObjectForwardPath: [NSManagedObject]
 
-        @Published public var inspectorPresented: Bool
+    public var inspectorPresented: Bool
     
     init() {
         self.toManyObjectsPath = [ToManyObjects]()
@@ -27,6 +29,24 @@ class SDVViewModel : ObservableObject {
         self.toOneObjectPath = [NSManagedObject]()
         self.toOneObjectForwardPath = [NSManagedObject]()
         self.inspectorPresented = false
+        
+#if os(iOS)
+        let swiftDataNotification = ProcessInfo.processInfo.operatingSystemVersion.majorVersion > 17
+#endif
+#if os(macOS)
+        let swiftDataNotification = ProcessInfo.processInfo.operatingSystemVersion.majorVersion > 14
+#endif
+
+        let name = swiftDataNotification ? ModelContext.didSave : .NSManagedObjectContextDidSaveObjectIDs
+
+        NotificationCenter.default.addObserver(forName: name,
+                                               object: nil,
+                                               queue: OperationQueue.main,
+                                               using: { _ in
+            Task { @MainActor in
+                self.refreshID = UUID()
+            }
+        } )
     }
     
     // SwiftData Model Context
@@ -60,24 +80,24 @@ class SDVViewModel : ObservableObject {
     }
 
     // Core Data Managed Object Model
-    public lazy var objectModel: NSManagedObjectModel = {
+    public var objectModel: NSManagedObjectModel {
         
-        guard let modelConfiguration = self.modelContext.container.configurations.first else {
+        guard let modelConfiguration = modelContext.container.configurations.first else {
             fatalError("Unable to get SwiftData model configuration.")
         }
         
-        guard let schema = modelConfiguration.schema else {
+        guard let _ = modelConfiguration.schema else {
             fatalError("Unable to get SwiftData's model schema.")
         }
         
-        guard let coreDataModel = NSManagedObjectModel.makeManagedObjectModel(for: self.modelTypes) else {
+        guard let coreDataModel = NSManagedObjectModel.makeManagedObjectModel(for: modelTypes) else {
             fatalError("Unable to access Core Data Managed Object Model.")
         }
         return coreDataModel
-    }()
+    }
     
     // Core Data Managed Object Context
-    public lazy var context: NSManagedObjectContext = {
+    public var context: NSManagedObjectContext {
         
         guard let urlApp = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).last else {
             fatalError("Unable to get applicationSupportDirectory.")
@@ -88,7 +108,7 @@ class SDVViewModel : ObservableObject {
             fatalError("Unable to find SwiftData default.store file.")
         }
 
-        let persistentContainer = NSPersistentContainer(name: "SwiftDataViewer", managedObjectModel: self.objectModel)
+        let persistentContainer = NSPersistentContainer(name: "SwiftDataViewer", managedObjectModel: objectModel)
         
         if let persistentStoreDescription = persistentContainer.persistentStoreDescriptions.first {
             persistentStoreDescription.url = urlStore
@@ -103,10 +123,10 @@ class SDVViewModel : ObservableObject {
 
         let context = persistentContainer.viewContext
         return context
-    }()
+    }
     
-    public var navigationTitle: String{
-        if let navigationTitle = self.toManyObjectsPath.last?.navigationTitle {
+    public var navigationTitle: String {
+        if let navigationTitle = toManyObjectsPath.last?.navigationTitle {
             return navigationTitle
         } else {
             return "SwiftData Viewer"
@@ -129,21 +149,21 @@ class SDVViewModel : ObservableObject {
     }
     
     public func backwardToManyObjects() {
-        let objects = self.toManyObjectsPath.removeLast()
+        let objects = toManyObjectsPath.removeLast()
         self.toManyObjectsForwardPath.insert(objects, at: 0)
     }
     
     public var backwardToManyDisabled: Bool {
-        return self.toManyObjectsPath.isEmpty
+        return toManyObjectsPath.isEmpty
     }
     
     public func forwardToManyObjects() {
-        let objects = self.toManyObjectsForwardPath.removeFirst()
+        let objects = toManyObjectsForwardPath.removeFirst()
         self.toManyObjectsPath.append(objects)
     }
     
     public var forwardToManyDisabled: Bool {
-        return self.toManyObjectsForwardPath.isEmpty
+        return toManyObjectsForwardPath.isEmpty
     }
     
     // To One Object Stack
@@ -156,28 +176,28 @@ class SDVViewModel : ObservableObject {
     }
     
     public func backwardToOneObject() {
-        let object = self.toOneObjectPath.removeLast()
+        let object = toOneObjectPath.removeLast()
         self.toOneObjectForwardPath.insert(object, at: 0)
         
-        self.inspectorPresented = self.toOneObjectPath.count > 0
+        self.inspectorPresented = toOneObjectPath.count > 0
     }
     
-    public var backwardToOneDisabled: Bool{
-        return self.toOneObjectPath.isEmpty
+    public var backwardToOneDisabled: Bool {
+        return toOneObjectPath.isEmpty
     }
    
     public func forwardToOneObject() {
-        let object = self.toOneObjectForwardPath.removeFirst()
+        let object = toOneObjectForwardPath.removeFirst()
         self.toOneObjectPath.append(object)
     }
     
-    public var forwardToOneDisabled: Bool{
-        return self.toOneObjectForwardPath.isEmpty
+    public var forwardToOneDisabled: Bool {
+        return toOneObjectForwardPath.isEmpty
     }
    
 }
 
-public class ToManyObjects : Hashable, ObservableObject {
+@Observable public class ToManyObjects : Hashable {
     
     public static func == (lhs: ToManyObjects, rhs: ToManyObjects) -> Bool {
         lhs.managedObjects == rhs.managedObjects

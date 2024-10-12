@@ -12,16 +12,15 @@ import CoreData
 @MainActor
 struct SDVSidebarView: View {
     
-    @EnvironmentObject private var viewModel: SDVViewModel
-    
+    @Environment(SDVViewModel.self) private var viewModel
     @Environment(\.managedObjectContext) private var context   // Core Data's Context
 
     var body: some View {
         
         List {
             Section(header: Text("All SwiftData Entities".uppercased())) {
-                ForEach(self.viewModel.objectModel.entities, id: \.self) { entity in
-                    Button(action: { self.pushAllObjects(for: entity) },
+                ForEach(viewModel.objectModel.entities, id: \.self) { entity in
+                    Button(action: { pushAllObjects(for: entity) },
                            label: { SDVSidebarEntityView(entity: entity) }
                     )
                     .buttonStyle(.plain)
